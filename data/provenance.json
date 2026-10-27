@@ -1,0 +1,27 @@
+{
+  "source": "Open-Meteo Historical Weather API; ECMWF ERA5 reanalysis",
+  "requested_coordinates": [
+    6.9271,
+    79.8612
+  ],
+  "returned_coordinates": [
+    7.0,
+    80.0
+  ],
+  "timezone": "Asia/Colombo",
+  "units": {
+    "time": "iso8601",
+    "temperature_2m_max": "\u00b0C",
+    "temperature_2m_min": "\u00b0C",
+    "precipitation_sum": "mm",
+    "relative_humidity_2m_mean": "%",
+    "wind_speed_10m_max": "km/h",
+    "surface_pressure_mean": "hPa"
+  },
+  "url": "https://archive-api.open-meteo.com/v1/archive?latitude=6.9271&longitude=79.8612&start_date=2014-01-01&end_date=2025-12-31&models=era5&timezone=Asia%2FColombo&daily=temperature_2m_max%2Ctemperature_2m_min%2Cprecipitation_sum%2Crelative_humidity_2m_mean%2Cwind_speed_10m_max%2Csurface_pressure_mean",
+  "collected_at_utc": "2026-10-27T15:12:38.773137+00:00",
+  "raw_sha256": "e5ff0ebda82764655a9dc4e41226a05454b05db5ce07effa5be9e3a16770312b",
+  "license": "CC BY 4.0",
+  "attribution": "Weather data by Open-Meteo.com, using ECMWF ERA5.",
+  "modifications": "Daily extract converted to CSV; lagged/rolling and seasonal predictors derived."
+}
