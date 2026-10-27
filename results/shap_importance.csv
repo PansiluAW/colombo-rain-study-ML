@@ -1,0 +1,12 @@
+feature,label,mean_abs_shap
+rain_today,Today's rain (mm),0.8228570817391228
+humidity_today,Today's mean humidity (%),0.7175766309734641
+season_cos,Target-date season (cosine),0.6961171613023519
+rain_mean_3d,Mean rain over last 3 days (mm),0.6621585490320745
+rain_mean_7d,Mean rain over last 7 days (mm),0.49887791795872455
+temp_max_today,Today's maximum temperature (C),0.4826839186165041
+pressure_today,Today's mean pressure (hPa),0.4274924247222772
+temp_min_today,Today's minimum temperature (C),0.4182990080668597
+season_sin,Target-date season (sine),0.3347473046736577
+wind_today,Today's maximum wind (km/h),0.1663097551439949
+pressure_change,Pressure change since yesterday (hPa),0.033298528267225715
