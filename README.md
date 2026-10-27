@@ -67,7 +67,27 @@ ERA5 arrives after the observation day. This is a retrospective classification s
 
 ## Deploy from GitHub
 
-In Streamlit Community Cloud, create an app, select this repository and the `main` branch, and set the entry point to `streamlit_app.py`. Select Python 3.12 in Advanced settings. Dependencies are installed from the root `requirements.txt`. Changes pushed to the connected branch update the deployed app.
+1. Open [Streamlit Community Cloud](https://share.streamlit.io/), sign in and connect your GitHub account if requested.
+2. Choose **Create app**, then **Yup, I have an app**.
+3. Enter the settings below. If the repository is not suggested, enter it manually or use **Paste GitHub URL** with the link to `streamlit_app.py` in this repository.
+
+| Setting | Value |
+|---|---|
+| Repository | `PansiluAW/colombo-rain-study-ML` |
+| Branch | `main` |
+| Main file path | `streamlit_app.py` |
+| Python version, under Advanced settings | `3.12` |
+| Secrets | Leave empty |
+
+4. Save the advanced settings and choose **Deploy**. Dependencies are installed from the root `requirements.txt`; the saved model and data are already included. No training run or API key is needed.
+5. Once the app opens, select **04 Jan 2025 / correct dry day**. The expected result is **DRY**, with a **29.6%** model probability. Change humidity from **76% to 86%** and submit: the probability should become **62.0%**, still below the **78%** wet-day cutoff, and the explanation should update. Set minimum temperature above maximum temperature to check that an error replaces the prediction.
+6. Check **Settings > Sharing** and confirm the examiner can view the app. Test the copied app link in a private/incognito window. Changes pushed to `main` update the deployed app.
+
+Deployment and sharing instructions follow the [official deployment guide](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy) and [sharing guide](https://docs.streamlit.io/deploy/streamlit-community-cloud/share-your-app).
+
+## Demo video
+
+Record 3–5 minutes showing this QDA frontend: enter weather, inspect a wet and dry example, change an input, explain the SHAP chart, show validation, and open the results and data tabs. Include the GitHub repository and deployed app link. Mention the retrospective ERA5 limitation and one error example. Check the final recording against the current model and results before submission.
 
 The report PDF, source/dataset package and 3–5 minute demo video are the assignment submission items. Check examiner access to any hosted links before submitting.
 

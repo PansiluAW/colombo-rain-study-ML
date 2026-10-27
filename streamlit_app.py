@@ -1,5 +1,5 @@
 """Colombo rain notebook: a small interface for the saved Regularised QDA study."""
-from datetime import date,timedelta
+from datetime import date
 import json
 import numpy as np
 import pandas as pd
@@ -111,7 +111,7 @@ with notebook:
                 st.write(f'Recorded next-day rain: **{matched["actual_rain"]:.1f} mm** / {"wet" if matched["actual"] else "dry"}.')
             st.markdown('<div class="rule"></div>',unsafe_allow_html=True)
             st.markdown('### What moved the score?')
-            st.caption('Native interventional SHAP, calculated for this entry. Blue pushes towards wet; brown pushes towards dry.')
+            st.caption('Exact interventional SHAP, calculated for this entry. Blue pushes towards wet; brown pushes towards dry.')
             figure=shap_figure(prediction['shap'],LABELS)
             st.pyplot(figure,clear_figure=True);plt.close(figure)
             train=data[data.target_date<'2022-01-01']
@@ -141,7 +141,7 @@ with results:
         st.table(pd.DataFrame([[m['tn'],m['fp']],[m['fn'],m['tp']]],index=['Actual dry','Actual wet'],columns=['Predicted dry','Predicted wet']))
         st.caption(f'{m["fn"]} wet days were missed. There were {m["fp"]} false wet alerts. Approximate 95% block-bootstrap AUC interval: {summary["auc_ci_95"][0]:.3f}–{summary["auc_ci_95"][1]:.3f}.')
     with b:
-        st.markdown('### Inputs used most often')
+        st.markdown('### Largest average contributions')
         fig,ax=plt.subplots(figsize=(6,3.2));fig.patch.set_alpha(0);ax.set_facecolor('none')
         g=importance.head(6).iloc[::-1]
         ax.barh(g.label,g.mean_abs_shap,color='#30597a',height=.55)
