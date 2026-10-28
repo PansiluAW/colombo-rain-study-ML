@@ -139,7 +139,7 @@ with results:
         m=summary['test']['Regularised QDA']
         st.markdown('### Where the predictions went wrong')
         st.table(pd.DataFrame([[m['tn'],m['fp']],[m['fn'],m['tp']]],index=['Actual dry','Actual wet'],columns=['Predicted dry','Predicted wet']))
-        st.caption(f'{m["fn"]} wet days were missed. There were {m["fp"]} false wet alerts. Approximate 95% block-bootstrap AUC interval: {summary["auc_ci_95"][0]:.3f}–{summary["auc_ci_95"][1]:.3f}.')
+        st.caption(f'{m["fn"]} wet days were missed; {m["fp"]} false wet alerts. Wet-day cutoff: {threshold:.0%}.')
     with b:
         st.markdown('### Largest average contributions')
         fig,ax=plt.subplots(figsize=(6,3.2));fig.patch.set_alpha(0);ax.set_facecolor('none')
@@ -149,9 +149,6 @@ with results:
         for spine in ax.spines.values():spine.set_visible(False)
         fig.tight_layout();st.pyplot(fig,clear_figure=True);plt.close(fig)
         st.caption('240 evenly spaced test days; all training rows form the SHAP background. Interventional replacements can break relationships between inputs.')
-    with st.expander('Training choices'):
-        st.write(f'Quadratic Discriminant Analysis; covariance regularisation {summary["selected_params"]["reg_param"]}. Eight settings were compared on validation AUC. Rainfall inputs use log1p, then all inputs are standardised using training rows only. The {threshold:.2f} cutoff was selected on validation balanced accuracy. No deep learning is used.')
-        st.dataframe(pd.DataFrame(summary['candidates']),hide_index=True,width='stretch')
 
 with dataset:
     st.markdown('### A compiled local dataset')

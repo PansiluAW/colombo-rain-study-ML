@@ -1,6 +1,5 @@
 """Train on 2014-21, select on 2022-23, then evaluate once on 2024-25."""
 import json
-from pathlib import Path
 import platform
 import importlib.metadata
 import numpy as np
@@ -15,8 +14,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (roc_auc_score, average_precision_score, accuracy_score,
     balanced_accuracy_score, precision_score, recall_score, f1_score, brier_score_loss,
-    confusion_matrix, roc_curve, precision_recall_curve)
-from sklearn.calibration import calibration_curve
+    confusion_matrix, roc_curve)
 from src.data import ROOT, FEATURES, LABELS, make_frame, splits
 
 SEED = 269220
@@ -86,14 +84,6 @@ def run():
     test_export=test[['observation_date','target_date','target_rain_mm','wet_tomorrow']].copy()
     for name,probs in probabilities.items(): test_export[name]=probs
     test_export.to_csv(OUT/'test_predictions.csv',index=False)
-    # Moving-block resampling acknowledges short-range daily dependence.
-    rng=np.random.default_rng(SEED); boot=[]; delta=[]; n=len(test); block=30
-    for _ in range(1000):
-        starts=rng.integers(0,n-block+1,size=int(np.ceil(n/block)))
-        idx=np.concatenate([np.arange(s,s+block) for s in starts])[:n]
-        if len(np.unique(yt[idx]))<2: continue
-        auc=roc_auc_score(yt[idx],p[idx]); boot.append(auc)
-        delta.append(auc-roc_auc_score(yt[idx],probabilities['Monthly climatology'][idx]))
     # Exact interventional SHAP of the quadratic log-odds, training background.
     sampled=np.linspace(0,len(test)-1,min(240,len(test)),dtype=int)
     contributions,base=model.explain(Xt.iloc[sampled])
@@ -102,7 +92,6 @@ def run():
     assert np.allclose(shap.sum(axis=1),raw,atol=1e-8)
     importance=np.abs(contributions).mean(axis=0); order=np.argsort(importance)
     pd.DataFrame({'feature':FEATURES,'label':LABELS,'mean_abs_shap':importance}).sort_values('mean_abs_shap',ascending=False).to_csv(OUT/'shap_importance.csv',index=False)
-    pd.DataFrame(shap,columns=FEATURES+['base_value']).to_csv(OUT/'shap_values.csv',index=False)
     groups={'Correct wet day':(yt==1)&pred,'Correct dry day':(yt==0)&~pred,
             'Missed wet day':(yt==1)&~pred,'False wet alert':(yt==0)&pred}
     examples=[]
@@ -121,39 +110,18 @@ def run():
         for k,v in [('train',train),('validation',val),('test',test)]},
         candidates=candidates,selected_params=dict(reg_param=float(qda.reg_param),preprocessing="log1p of three rainfall features; train-only standardisation",priors="training class frequencies"),
         validation=metrics(yv,pval,threshold),test=scores,
-        auc_ci_95=np.quantile(boot,[.025,.975]).tolist(),
-        auc_delta_vs_month_ci_95=np.quantile(delta,[.025,.975]).tolist(),
-        bootstrap=dict(replicates=len(boot),block_days=block,method='moving-block percentile; approximate'),
         shap=dict(n=len(sampled),background_n=len(train),method='exact interventional SHAP of quadratic score',space='raw log odds',max_additivity_error=float(np.max(np.abs(shap.sum(axis=1)-raw)))),
         examples=examples,versions={k:importlib.metadata.version(k) for k in ['numpy','pandas','scikit-learn','matplotlib','streamlit']},
         python=platform.python_version())
-    summary['monthly_test']=[dict(month=int(m),n=len(g),wet_rate=float(g.wet_tomorrow.mean()),
-        **metrics(g.wet_tomorrow, g['Regularised QDA'],threshold)) for m,g in test_export.groupby(test_export.target_date.dt.month)]
     (OUT/'metrics.json').write_text(json.dumps(summary,indent=2))
     model.save(ROOT/'models/qda.json')
     plt.rcParams.update({'font.size':10,'axes.spines.top':False,'axes.spines.right':False})
-    colors=['#0b716d','#d17c25','#687588','#ad7590','#888888']
+    colors=['#222222','#555555','#888888','#444444','#aaaaaa']
     plt.figure(figsize=(7,4))
-    for (name,probs),color in zip(probabilities.items(),colors):
-        fpr,tpr,_=roc_curve(yt,probs); plt.plot(fpr,tpr,label=f'{name}: {scores[name]["auc"]:.3f}',color=color)
+    for (name,probs),color,style in zip(probabilities.items(),colors,['-','--','-.',':','-']):
+        fpr,tpr,_=roc_curve(yt,probs); plt.plot(fpr,tpr,label=f'{name}: {scores[name]["auc"]:.3f}',color=color,linestyle=style)
     plt.plot([0,1],[0,1],'k--',alpha=.3);plt.xlabel('False positive rate');plt.ylabel('True positive rate');plt.legend(fontsize=8);save_plot('roc')
-    plt.figure(figsize=(7,4)); precision,recall,_=precision_recall_curve(yt,p)
-    plt.plot(recall,precision,color=colors[0]);plt.axhline(yt.mean(),color='gray',linestyle='--',label='Test prevalence')
-    plt.xlabel('Recall');plt.ylabel('Precision');plt.legend();save_plot('precision_recall')
     plt.figure(figsize=(7,3.6));plt.barh(np.array(LABELS)[order],importance[order],color=colors[0]);plt.xlabel('Mean absolute SHAP value (log odds)');save_plot('shap_global')
-    plt.figure(figsize=(6,3.5));cm=confusion_matrix(yt,pred,labels=[0,1]);plt.imshow(cm,cmap='Blues')
-    for (i,j),v in np.ndenumerate(cm):plt.text(j,i,str(v),ha='center',va='center',fontsize=20,color='white' if v>cm.max()/2 else 'black')
-    plt.xticks([0,1],['Predicted dry','Predicted wet']);plt.yticks([0,1],['Actual dry','Actual wet']);save_plot('confusion')
-    plt.figure(figsize=(6,3.5));observed,forecast=calibration_curve(yt,p,n_bins=8,strategy='quantile')
-    plt.plot(forecast,observed,'o-',color=colors[0]);plt.plot([0,1],[0,1],'--',color='gray');plt.xlabel('Mean predicted probability');plt.ylabel('Observed wet-day frequency');save_plot('calibration')
-    plt.figure(figsize=(7,3.6))
-    for idx in [0,1]:plt.scatter(Xt.iloc[sampled,idx],shap[:,idx],s=12,alpha=.5,label=LABELS[idx])
-    plt.xlabel('Feature value (native units)');plt.ylabel('SHAP contribution (log odds)');plt.legend(fontsize=8);save_plot('shap_dependence')
-    ex=examples[0]; ix=np.argsort(np.abs(ex['shap']))[-6:]
-    plt.figure(figsize=(7,3.5));vals=np.array(ex['shap'])[ix]
-    plt.barh(np.array(LABELS)[ix],vals,color=['#0b716d' if v>=0 else '#d17c25' for v in vals]);plt.axvline(0,color='gray');plt.xlabel('Contribution to raw log odds');plt.title(f'Local SHAP: {ex["date"]}, p={ex["probability"]:.3f}');save_plot('shap_local')
-    counts=frame.groupby(frame.target_date.dt.year).wet_tomorrow.agg(['size','mean'])
-    plt.figure(figsize=(7,3.3));plt.bar(counts.index,counts['mean'],color=colors[0]);plt.ylim(0,1);plt.ylabel('Wet-day proportion');plt.xlabel('Target year');save_plot('yearly_prevalence')
-    print(json.dumps({'rows':len(frame),'regularisation':float(qda.reg_param),'threshold':threshold,'test':scores,'auc_ci':summary['auc_ci_95']},indent=2))
+    print(json.dumps({'rows':len(frame),'regularisation':float(qda.reg_param),'threshold':threshold,'test':scores},indent=2))
 
 if __name__=='__main__': run()
