@@ -5,6 +5,8 @@ Next-day rain classification for the Colombo area using regularised Quadratic Di
 
 IT5514 - Applied Machine Learning. Pansilu Ashinshana Wijesiri, 269220E. MSc in Artificial Intelligence, University of Moratuwa.
 
+[Live application on Azure](https://colombo-rain-269220e-h4exayebdwandnc2.centralindia-01.azurewebsites.net/) | [Project links and screenshots](PROJECT_LINKS.md)
+
 ## Run the application
 
 Use Python 3.12. The saved model and dataset are included.
