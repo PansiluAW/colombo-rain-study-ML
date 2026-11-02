@@ -36,8 +36,6 @@ Weather data by Open-Meteo, using ECMWF ERA5, under [CC BY 4.0](https://creative
 
 Training recreates the saved model, metrics, held-out predictions and six figures in `results/plots`. It uses the included data snapshot; `python -m src.data` is only needed to collect a fresh extract, which may differ if the source is revised.
 
-## Azure deployment
+The Flask frontend accepts weather inputs and shows predictions with SHAP explanations. It demonstrates historical classification using delayed reanalysis, not a live forecast or flood warning.
 
-Use Linux Azure App Service with Python 3.12 and Gunicorn. Follow [the deployment steps](docs/AZURE.md). The frontend is Flask + HTML/CSS; no API key, database or user account is needed by the application. It demonstrates historical classification using delayed reanalysis, not a live forecast or flood warning.
-
-The [report](https://github.com/PansiluAW/colombo-rain-study-ML/blob/main/report/269220E_ML_Report.pdf) covers the study. The [demo script](docs/VIDEO_SCRIPT.md) gives a 3–5 minute recording sequence; record it after verifying the Azure deployment.
+The [report](https://github.com/PansiluAW/colombo-rain-study-ML/blob/main/report/269220E_ML_Report.pdf) covers the methodology, results and interpretation.
