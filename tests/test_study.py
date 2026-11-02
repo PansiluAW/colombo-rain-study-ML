@@ -4,6 +4,7 @@ import itertools
 import json
 import math
 import unittest
+from html.parser import HTMLParser
 
 import numpy as np
 import pandas as pd
@@ -110,6 +111,48 @@ class FrontendChecks(unittest.TestCase):
         expected = assess(load_model(), frame, .78)
         for value in expected['shap']:
             self.assertIn(f'{value:+.4f}', html)
+
+    def test_comparison_uses_the_recorded_reference_and_can_be_restored(self):
+        values = self.values | {'humidity_today': 86, 'reference_example': '1',
+                                'reference_probability': '0'}
+        html = self.client.post('/', data=values).get_data(as_text=True)
+        self.assertIn('29.6%', html)
+        self.assertIn('62.0%', html)
+        self.assertIn('+32.4 percentage points', html)
+        self.assertIn(examples[1]['name'], html)
+        self.assertNotIn('Recorded next-day rain', html)
+        self.assertIn('href="/?example=1">Restore example', html)
+        restored = self.client.get('/?example=1').get_data(as_text=True)
+        self.assertIn('29.6%', restored)
+        self.assertIn('Recorded next-day rain', restored)
+        self.assertNotIn('Change from original entry', restored)
+
+    def test_invalid_comparison_references_are_rejected(self):
+        for reference in ['-1', '4', 'invalid', '<script>']:
+            with self.subTest(reference=reference):
+                response = self.client.post('/', data=self.values | {'reference_example': reference})
+                self.assertEqual(response.status_code, 422)
+                self.assertIn('Choose a recorded example', response.get_data(as_text=True))
+                self.assertNotIn('class="probability"', response.get_data(as_text=True))
+
+    def test_all_contribution_bars_and_full_size_charts_are_available(self):
+        class Page(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.items = 0
+                self.charts = []
+            def handle_starttag(self, tag, attrs):
+                attrs = dict(attrs)
+                self.items += tag == 'li'
+                if tag == 'a' and attrs.get('href', '').startswith('/figures/'):
+                    self.charts.append(attrs['href'])
+        entry = Page()
+        entry.feed(self.client.get('/').get_data(as_text=True))
+        self.assertEqual(entry.items, 11)
+        results = Page()
+        results.feed(self.client.get('/results').get_data(as_text=True))
+        self.assertEqual(set(results.charts), {f'/figures/{name}.png' for name in
+                         ['validation', 'roc', 'precision_recall', 'confusion', 'shap_global', 'shap_local']})
 
     def test_invalid_entries_do_not_predict(self):
         cases = [dict(temp_min_today=40), dict(rain_today=-1),

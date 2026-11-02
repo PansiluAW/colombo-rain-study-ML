@@ -134,3 +134,24 @@ footer p { margin: 0; }
   footer { display: block; }
   footer p + p { margin-top: 12px; }
 }
+
+/* Comparisons use the selected recorded entry as a fixed reference. */
+.prediction { border-top: 3px solid var(--wet); }
+.form-actions { display: flex; align-items: center; gap: 14px; margin-top: 20px; }
+.form-actions button { flex: 1; margin-top: 0; }
+.restore { font-size: 12px; white-space: nowrap; }
+.comparison { margin: 21px 0; padding: 15px 0 3px; border-top: 1px solid var(--line); }
+.comparison-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 14px; font-size: 12px; }
+.comparison-heading strong { font-weight: 600; }
+.comparison-heading > span { color: var(--wet); font-variant-numeric: tabular-nums; }
+.reference-note { font-size: 11px; color: var(--muted); margin: 4px 0 12px; }
+.compare-row { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; gap: 10px; margin: 9px 0; font-size: 12px; }
+.compare-row strong { font-weight: 400; text-align: right; font-variant-numeric: tabular-nums; }
+.compare-track { height: 8px; background: #e6ecee; }
+.compare-track i { display: block; height: 100%; background: #80949d; }
+.compare-track.edited i { background: var(--wet); }
+.remaining-bars { margin-bottom: 17px; }
+.remaining-bars .contributions { margin-bottom: 6px; }
+figure > a { display: block; }
+figure > a:hover { outline: 1px solid var(--wet); outline-offset: 5px; }
+@media (max-width: 400px) { .form-actions { gap: 10px; }.form-actions button { font-size: 12px; }.restore { font-size: 11px; } }

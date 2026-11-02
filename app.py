@@ -35,6 +35,9 @@ def notebook():
     matched = None
     contributions = []
     outside = []
+    reference_index = None
+    reference = None
+    comparison = None
     if request.method == 'POST':
         values = {key: request.form.get(key, '') for key in INPUTS}
         target = request.form.get('target_date', '')
@@ -46,15 +49,31 @@ def notebook():
         except ValueError:
             abort(404)
         example = examples[index]
+        reference_index = index
         values = dict(zip(INPUTS, example['features']))
         target = example['date']
     try:
+        if request.method == 'POST' and request.form.get('reference_example', ''):
+            try:
+                reference_index = int(request.form['reference_example'])
+                if not 0 <= reference_index < len(examples):
+                    raise ValueError
+            except ValueError:
+                reference_index = None
+                raise ValueError('Choose a recorded example before comparing readings.') from None
+        if reference_index is not None:
+            reference = examples[reference_index]
         frame = make_input(target, values)
         prediction = assess(model, frame, threshold)
         target_label = date.fromisoformat(target).strftime('%d %b %Y')
         matched = next((item for item in examples if item['date'] == target
                        and np.allclose(frame.iloc[0].to_numpy(), item['features'],
                                        atol=1e-6, rtol=0)), None)
+        if reference is not None and (reference['date'] != target
+                or not np.allclose(frame.iloc[0].to_numpy(), reference['features'],
+                                   atol=1e-6, rtol=0)):
+            comparison = dict(original=reference['probability'],
+                              delta=100 * (prediction['probability'] - reference['probability']))
         outside = [LABELS[i] for i, key in enumerate(INPUTS)
                    if not train[key].min() <= frame.iloc[0][key] <= train[key].max()]
         largest = max(float(np.abs(prediction['shap']).max()), 1e-12)
@@ -74,6 +93,8 @@ def notebook():
     return render_template('notebook.html', active='entry', fields=fields,
                            target=target, target_label=target_label, examples=examples,
                            prediction=prediction, threshold=threshold, matched=matched,
+                           reference_index=reference_index, reference=reference,
+                           comparison=comparison,
                            contributions=contributions, outside=outside, error=error), 422 if error else 200
 
 

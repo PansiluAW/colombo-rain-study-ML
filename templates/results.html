@@ -8,18 +8,19 @@
     {% for name, metrics in summary.test.items() %}<tr><th scope="row">{{ name }}</th>{% for key in ['auc', 'accuracy', 'balanced_accuracy', 'f1', 'brier'] %}<td>{{ '%.3f'|format(metrics[key]) }}</td>{% endfor %}</tr>{% endfor %}
   </tbody></table></div>
   <p>QDA did not win every comparison. Logistic regression gave higher AUC and lower Brier loss; persistence gave higher accuracy and F1. Monthly climatology gave higher balanced accuracy.</p>
+  <p class="note">Select a chart to open it at full size.</p>
   <div class="figure-pair">
-    <figure><img src="{{ url_for('figure', name='roc') }}" alt="ROC curves: QDA AUC 0.873; logistic regression 0.885; monthly climatology 0.825."><figcaption>Test-period ranking across probability cutoffs.</figcaption></figure>
-    <figure><img src="{{ url_for('figure', name='confusion') }}" alt="QDA confusion matrix: 128 correct dry, 47 false wet alerts, 89 missed wet, 467 correct wet."><figcaption>At the fixed 78% cutoff: 89 missed wet days and 47 false wet alerts.</figcaption></figure>
+    <figure><a href="{{ url_for('figure', name='roc') }}" target="_blank" rel="noopener" aria-label="Open roc chart at full size"><img src="{{ url_for('figure', name='roc') }}" alt="ROC curves: QDA AUC 0.873; logistic regression 0.885; monthly climatology 0.825."></a><figcaption>Test-period ranking across probability cutoffs.</figcaption></figure>
+    <figure><a href="{{ url_for('figure', name='confusion') }}" target="_blank" rel="noopener" aria-label="Open confusion chart at full size"><img src="{{ url_for('figure', name='confusion') }}" alt="QDA confusion matrix: 128 correct dry, 47 false wet alerts, 89 missed wet, 467 correct wet."></a><figcaption>At the fixed 78% cutoff: 89 missed wet days and 47 false wet alerts.</figcaption></figure>
   </div>
   <div class="figure-pair">
-    <figure><img src="{{ url_for('figure', name='precision_recall') }}" alt="Precision-recall curves for the held-out test period."><figcaption>Precision and recall, with wet days as the positive class.</figcaption></figure>
-    <figure><img src="{{ url_for('figure', name='validation') }}" alt="Validation AUC for eight covariance regularisation values; alpha 0.75 selected."><figcaption>Covariance regularisation chosen using validation AUC.</figcaption></figure>
+    <figure><a href="{{ url_for('figure', name='precision_recall') }}" target="_blank" rel="noopener" aria-label="Open precision recall chart at full size"><img src="{{ url_for('figure', name='precision_recall') }}" alt="Precision-recall curves for the held-out test period."></a><figcaption>Precision and recall, with wet days as the positive class.</figcaption></figure>
+    <figure><a href="{{ url_for('figure', name='validation') }}" target="_blank" rel="noopener" aria-label="Open validation chart at full size"><img src="{{ url_for('figure', name='validation') }}" alt="Validation AUC for eight covariance regularisation values; alpha 0.75 selected."></a><figcaption>Covariance regularisation chosen using validation AUC.</figcaption></figure>
   </div>
   <h2>What the fitted model uses</h2>
   <div class="figure-pair">
-    <figure><img src="{{ url_for('figure', name='shap_global') }}" alt="Mean absolute SHAP: preceding-day rain, humidity and cosine season have the largest contributions."><figcaption>240 evenly spaced test days; all training rows form the background.</figcaption></figure>
-    <figure><img src="{{ url_for('figure', name='shap_local') }}" alt="Individual SHAP contributions for a correct wet prediction and a false wet alert."><figcaption>Individual explanations can also describe confident wrong predictions.</figcaption></figure>
+    <figure><a href="{{ url_for('figure', name='shap_global') }}" target="_blank" rel="noopener" aria-label="Open shap global chart at full size"><img src="{{ url_for('figure', name='shap_global') }}" alt="Mean absolute SHAP: preceding-day rain, humidity and cosine season have the largest contributions."></a><figcaption>240 evenly spaced test days; all training rows form the background.</figcaption></figure>
+    <figure><a href="{{ url_for('figure', name='shap_local') }}" target="_blank" rel="noopener" aria-label="Open shap local chart at full size"><img src="{{ url_for('figure', name='shap_local') }}" alt="Individual SHAP contributions for a correct wet prediction and a false wet alert."></a><figcaption>Individual explanations can also describe confident wrong predictions.</figcaption></figure>
   </div>
 </section>
 {% endblock %}
