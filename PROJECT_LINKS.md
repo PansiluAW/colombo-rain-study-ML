@@ -13,8 +13,8 @@ The app demonstrates next-day wet/dry classification with regularised QDA and an
 
 ## Application screenshots
 
-![Weather observations, prediction and SHAP explanation](report/screenshots/prediction.jpg)
+![Wet-day probability after editing humidity](report/screenshots/prediction.jpg)
 
-![Changed readings and SHAP explanation](report/screenshots/explanation.jpg)
+![Six largest SHAP contributions for the edited readings](report/screenshots/explanation.jpg)
 
 ![Held-out test results](report/screenshots/results.jpg)
