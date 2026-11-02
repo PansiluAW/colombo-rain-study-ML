@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="entry-layout">
-  <section aria-labelledby="readings-title">
-    <h1 id="readings-title">The readings</h1>
-    <p class="note">Start with a held-out day. Each example can be edited below.</p>
+  <section class="readings-panel" aria-labelledby="readings-title">
+    <h1 id="readings-title">Weather observations</h1>
+    <p class="note">Choose a recorded test day, then change the readings to explore the model.</p>
     <div class="examples" aria-label="Recorded examples">
     {% for example in examples %}
-      <a href="{{ url_for('notebook', example=loop.index0) }}">{{ example.name }}<small>{{ example.date }}</small></a>
+      <a class="{% if matched and matched.name == example.name %}selected{% endif %}" href="{{ url_for('notebook', example=loop.index0) }}">{{ example.name }}<small>{{ example.date }}</small></a>
     {% endfor %}
     </div>
-    <form method="post" action="{{ url_for('notebook') }}" id="weather-form">
+    <form method="post" action="{{ url_for('notebook') }}#prediction" id="weather-form">
       <label class="date-field" for="target_date">Date to predict
         <input type="date" id="target_date" name="target_date" value="{{ target }}" required>
       </label>
@@ -22,22 +22,24 @@
       {% endfor %}
       </div>
       <p class="note">Rain means end on the preceding day. Pressure change is that day's mean minus the day before it.</p>
-      <button type="submit">Work out the next day <span aria-hidden="true">→</span></button>
+      <button type="submit">Calculate prediction <span aria-hidden="true">→</span></button>
     </form>
     <p class="pencil">A wet day means at least 1 mm of rain. The nine readings and two seasonal values from the date make the model's eleven inputs.</p>
   </section>
-  <section class="prediction" aria-labelledby="prediction-title" aria-live="polite">
-    <h1 id="prediction-title">The model's entry</h1>
+  <section id="prediction" class="prediction" aria-labelledby="prediction-title" aria-live="polite">
+    <h2 id="prediction-title">Next-day estimate</h2>
+    <div class="prediction-body">
     {% if error %}
       <div class="error" role="alert"><strong>Check the readings</strong><p>{{ error }}</p></div>
     {% elif prediction %}
       <p class="entry-date">{{ target_label }}</p>
-      <p class="result-word">{{ prediction.label }}</p>
-      <p class="probability">{{ '%.1f'|format(100 * prediction.probability) }}% <span>model probability of rain</span></p>
+      <div class="estimate"><p class="result-word {{ prediction.label|lower }}">{{ prediction.label }}</p>
+      <p class="probability">{{ '%.1f'|format(100 * prediction.probability) }}% <span>model probability of rain</span></p></div>
+      <div class="probability-meter" role="img" aria-label="Wet-day probability {{ '%.1f'|format(100 * prediction.probability) }} percent; cutoff {{ '%.0f'|format(100 * threshold) }} percent"><span class="fill" style="width:{{ 100 * prediction.probability }}%"></span><span class="cutoff" style="left:{{ 100 * threshold }}%"></span></div><div class="meter-labels"><span>0%</span><span>Wet cutoff: 78%</span><span>100%</span></div>
       <p class="note">Wet-day cutoff: {{ '%.0f'|format(100 * threshold) }}%. Probabilities have not been independently calibrated.</p>
       {% if matched %}<p class="observation">Recorded next-day rain: <strong>{{ '%.1f'|format(matched.actual_rain) }} mm</strong> / {{ 'wet' if matched.actual else 'dry' }}.</p>{% endif %}
       {% if outside %}<p class="warning">Outside the training range: {{ outside|join(', ') }}.</p>{% endif %}
-      <h2>What moved the score?</h2>
+      <h3>What moved the score?</h3>
       <p class="note">Exact interventional SHAP for this entry. Contributions explain log odds, not percentage points.</p>
       <div class="chart-key"><span>← towards dry</span><span>towards wet →</span></div>
       <ol class="contributions" aria-label="Six largest SHAP contributions">
@@ -55,6 +57,7 @@
         <p class="note">The background is all 2,915 training rows. Substitutions can break correlations and the sine/cosine relationship. These are model associations, not causal effects.</p>
       </details>
     {% endif %}
+    </div>
   </section>
 </div>
 {% endblock %}

@@ -9,9 +9,9 @@
 <body>
 <div class="sheet">
   <header>
-    <div class="edition"><span>FIELD NOTES / COLOMBO AREA</span><span>269220E · IT5514</span></div>
+    <div class="edition"><span>COLOMBO RAIN STUDY</span><span>269220E · IT5514</span></div>
     <a class="masthead" href="{{ url_for('notebook') }}">Colombo, <em>tomorrow.</em></a>
-    <p class="subtitle">A study of rain days, recent weather and the time of year.</p>
+    <p class="subtitle">Rain-day classification from recent weather and seasonal patterns.</p>
     <nav aria-label="Notebook pages">
       <a {% if active == 'entry' %}aria-current="page"{% endif %} href="{{ url_for('notebook') }}">01 / Make an entry</a>
       <a {% if active == 'results' %}aria-current="page"{% endif %} href="{{ url_for('results') }}">02 / Test results</a>
@@ -20,7 +20,7 @@
   </header>
   <main>{% block content %}{% endblock %}</main>
   <footer>
-    <p>Pansilu Ashinshana Wijesiri · 269220E<br>IT5514 - Applied Machine Learning · MSc in Artificial Intelligence, University of Moratuwa</p>
+    <p>Pansilu Ashinshana Wijesiri · 269220E<br>IT5514 - Applied Machine Learning · MSc in Artificial Intelligence, University of Moratuwa<br><a class="footer-link" href="https://github.com/PansiluAW/colombo-rain-study-ML">Source code on GitHub ↗</a></p>
     <p>Historical ERA5 reanalysis / 2014–2025<br>Research demonstration; not a live forecast or flood warning.</p>
   </footer>
 </div>
