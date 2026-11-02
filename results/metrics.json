@@ -14,15 +14,15 @@
     "season_cos"
   ],
   "feature_labels": [
-    "Today's rain (mm)",
-    "Today's mean humidity (%)",
-    "Today's maximum temperature (C)",
-    "Today's minimum temperature (C)",
-    "Today's maximum wind (km/h)",
-    "Today's mean pressure (hPa)",
-    "Mean rain over last 3 days (mm)",
-    "Mean rain over last 7 days (mm)",
-    "Pressure change since yesterday (hPa)",
+    "Preceding-day rain (mm)",
+    "Mean humidity (%)",
+    "Maximum temperature (C)",
+    "Minimum temperature (C)",
+    "Maximum wind (km/h)",
+    "Mean pressure (hPa)",
+    "3-day mean rain (mm/day)",
+    "7-day mean rain (mm/day)",
+    "Pressure change (hPa)",
     "Target-date season (sine)",
     "Target-date season (cosine)"
   ],
@@ -338,7 +338,8 @@
     "pandas": "2.2.3",
     "scikit-learn": "1.8.0",
     "matplotlib": "3.10.8",
-    "streamlit": "1.66.1"
+    "Flask": "3.1.3",
+    "gunicorn": "26.2.0"
   },
   "python": "3.12.14"
 }

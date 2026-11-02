@@ -1,4 +1,4 @@
-"""Feature construction shared by the Streamlit form and prediction checks."""
+"""Feature construction shared by the web form and prediction checks."""
 from datetime import date
 import math
 import numpy as np
@@ -11,10 +11,16 @@ LIMITS = [(0,500),(0,100),(10,50),(5,45),(0,200),(950,1050),(0,500),(0,500),(-50
 
 def make_input(target_date, values):
     if isinstance(target_date,str):
-        target_date=date.fromisoformat(target_date)
+        try:
+            target_date=date.fromisoformat(target_date)
+        except ValueError:
+            raise ValueError('Choose a valid date to predict.') from None
     if not isinstance(target_date,date):
         raise ValueError('Choose a valid date to predict.')
-    numbers=[float(values[key]) for key in INPUTS]
+    try:
+        numbers=[float(values[key]) for key in INPUTS]
+    except (KeyError,ValueError,TypeError):
+        raise ValueError('Enter a number in every weather field.') from None
     for key,value,(low,high) in zip(INPUTS,numbers,LIMITS):
         if not math.isfinite(value) or not low<=value<=high:
             raise ValueError(f'{key}: enter a value from {low} to {high}.')
@@ -36,7 +42,7 @@ def assess(model, frame, threshold):
     raw=float(model.decision_function(frame)[0])
     contributions,base=model.explain(frame)
     shap=contributions[0]
-    if not np.isclose(base+shap.sum(),raw,atol=1e-8):
+    if not np.isclose(base+shap.sum(),raw,atol=1e-8,rtol=0):
         raise RuntimeError('The explanation did not reconstruct the model score.')
     return dict(probability=probability,label='WET' if probability>=threshold else 'DRY',
                 raw=raw,base=base,shap=shap)

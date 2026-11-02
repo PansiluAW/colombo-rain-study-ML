@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Colombo, tomorrow.{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='notebook.css') }}">
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <div class="edition"><span>FIELD NOTES / COLOMBO AREA</span><span>269220E · IT5514</span></div>
+    <a class="masthead" href="{{ url_for('notebook') }}">Colombo, <em>tomorrow.</em></a>
+    <p class="subtitle">A study of rain days, recent weather and the time of year.</p>
+    <nav aria-label="Notebook pages">
+      <a {% if active == 'entry' %}aria-current="page"{% endif %} href="{{ url_for('notebook') }}">01 / Make an entry</a>
+      <a {% if active == 'results' %}aria-current="page"{% endif %} href="{{ url_for('results') }}">02 / Test results</a>
+      <a {% if active == 'data' %}aria-current="page"{% endif %} href="{{ url_for('dataset') }}">03 / The data</a>
+    </nav>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+  <footer>
+    <p>Pansilu Ashinshana Wijesiri · 269220E<br>IT5514 - Applied Machine Learning · MSc in Artificial Intelligence, University of Moratuwa</p>
+    <p>Historical ERA5 reanalysis / 2014–2025<br>Research demonstration; not a live forecast or flood warning.</p>
+  </footer>
+</div>
+</body>
+</html>

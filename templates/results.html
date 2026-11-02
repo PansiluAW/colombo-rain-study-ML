@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Test results / Colombo, tomorrow.{% endblock %}
+{% block content %}
+<section>
+  <h1>Leave the last two years out</h1>
+  <p>Fit: 2014–2021. Validation: 2022–2023. Test: 2024–2025, with 556 wet and 175 dry days. All settings were selected before evaluating the test period.</p>
+  <div class="table-wrap"><table class="metrics"><thead><tr><th scope="col">Model</th><th scope="col">AUC</th><th scope="col">Accuracy</th><th scope="col">Balanced accuracy</th><th scope="col">F1</th><th scope="col">Brier loss ↓</th></tr></thead><tbody>
+    {% for name, metrics in summary.test.items() %}<tr><th scope="row">{{ name }}</th>{% for key in ['auc', 'accuracy', 'balanced_accuracy', 'f1', 'brier'] %}<td>{{ '%.3f'|format(metrics[key]) }}</td>{% endfor %}</tr>{% endfor %}
+  </tbody></table></div>
+  <p>QDA did not win every comparison. Logistic regression gave higher AUC and lower Brier loss; persistence gave higher accuracy and F1. Monthly climatology gave higher balanced accuracy.</p>
+  <div class="figure-pair">
+    <figure><img src="{{ url_for('figure', name='roc') }}" alt="ROC curves: QDA AUC 0.873; logistic regression 0.885; monthly climatology 0.825."><figcaption>Test-period ranking across probability cutoffs.</figcaption></figure>
+    <figure><img src="{{ url_for('figure', name='confusion') }}" alt="QDA confusion matrix: 128 correct dry, 47 false wet alerts, 89 missed wet, 467 correct wet."><figcaption>At the fixed 78% cutoff: 89 missed wet days and 47 false wet alerts.</figcaption></figure>
+  </div>
+  <div class="figure-pair">
+    <figure><img src="{{ url_for('figure', name='precision_recall') }}" alt="Precision-recall curves for the held-out test period."><figcaption>Precision and recall, with wet days as the positive class.</figcaption></figure>
+    <figure><img src="{{ url_for('figure', name='validation') }}" alt="Validation AUC for eight covariance regularisation values; alpha 0.75 selected."><figcaption>Covariance regularisation chosen using validation AUC.</figcaption></figure>
+  </div>
+  <h2>What the fitted model uses</h2>
+  <div class="figure-pair">
+    <figure><img src="{{ url_for('figure', name='shap_global') }}" alt="Mean absolute SHAP: preceding-day rain, humidity and cosine season have the largest contributions."><figcaption>240 evenly spaced test days; all training rows form the background.</figcaption></figure>
+    <figure><img src="{{ url_for('figure', name='shap_local') }}" alt="Individual SHAP contributions for a correct wet prediction and a false wet alert."><figcaption>Individual explanations can also describe confident wrong predictions.</figcaption></figure>
+  </div>
+</section>
+{% endblock %}

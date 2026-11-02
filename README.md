@@ -1,7 +1,9 @@
 # colombo-rain-study-ML
 Assignment targeting the applied machine learning concepts attended during the MSc program at the University of Moratuwa.
 
-Next-day rain classification for the Colombo area using regularised Quadratic Discriminant Analysis (QDA) and SHAP. Pansilu Wijesiri, 269220E.
+Next-day rain classification for the Colombo area using regularised Quadratic Discriminant Analysis (QDA) and exact interventional SHAP.
+
+IT5514 - Applied Machine Learning. Pansilu Ashinshana Wijesiri, 269220E. MSc in Artificial Intelligence, University of Moratuwa.
 
 ## Run the application
 
@@ -11,10 +13,10 @@ Use Python 3.12. The saved model and dataset are included.
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python -m streamlit run streamlit_app.py
+python -m flask --app app run
 ```
 
-On Windows, activate the environment with `.venv\Scripts\activate`.
+Open `http://127.0.0.1:5000`. On Windows, activate the environment with `.venv\Scripts\activate`.
 
 ## Reproduce the results
 
@@ -23,6 +25,7 @@ python -m src.preprocess
 python -m src.train
 python -m src.evaluate
 python -m src.explain
+python -m unittest discover -s tests -v
 ```
 
 ## Dataset
@@ -31,6 +34,10 @@ The included snapshot contains 4,383 daily ERA5 records for 2014–2025, obtaine
 
 Weather data by Open-Meteo, using ECMWF ERA5, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Daily data were converted to CSV and weather-history and seasonal features were derived. No personal data were collected.
 
-## Deployment
+Training recreates the saved model, metrics, held-out predictions and six figures in `results/plots`. It uses the included data snapshot; `python -m src.data` is only needed to collect a fresh extract, which may differ if the source is revised.
 
-In Streamlit Community Cloud, select `PansiluAW/colombo-rain-study-ML`, branch `main`, entry point `streamlit_app.py` and Python 3.12. No API key or secrets are needed. The application demonstrates historical classification using delayed reanalysis; it is not a live forecast or flood warning.
+## Azure deployment
+
+Use Linux Azure App Service with Python 3.12 and Gunicorn. Follow [the deployment steps](docs/AZURE.md). The frontend is Flask + HTML/CSS; no API key, database or user account is needed by the application. It demonstrates historical classification using delayed reanalysis, not a live forecast or flood warning.
+
+The [report](https://github.com/PansiluAW/colombo-rain-study-ML/blob/main/report/269220E_ML_Report.pdf) covers the study. The [demo script](docs/VIDEO_SCRIPT.md) gives a 3–5 minute recording sequence; record it after verifying the Azure deployment.

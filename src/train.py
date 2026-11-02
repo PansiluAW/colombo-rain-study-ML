@@ -4,9 +4,6 @@ import platform
 import importlib.metadata
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from src.model import RainQDA, transform_rain
 from sklearn.pipeline import make_pipeline
@@ -14,12 +11,11 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (roc_auc_score, average_precision_score, accuracy_score,
     balanced_accuracy_score, precision_score, recall_score, f1_score, brier_score_loss,
-    confusion_matrix, roc_curve)
+    confusion_matrix)
 from src.data import ROOT, FEATURES, LABELS, make_frame, splits
 
 SEED = 269220
 OUT = ROOT/'results'
-PLOTS = OUT/'plots'
 
 def metrics(y, p, threshold):
     pred = p >= threshold
@@ -36,13 +32,8 @@ def threshold_for(y,p):
     grid = np.linspace(.2,.8,121)
     return float(max(grid, key=lambda t: (balanced_accuracy_score(y,p>=t),-abs(t-.5))))
 
-def save_plot(name):
-    plt.tight_layout()
-    plt.savefig(PLOTS/f'{name}.png', dpi=160, bbox_inches='tight')
-    plt.close()
-
 def run():
-    OUT.mkdir(exist_ok=True); PLOTS.mkdir(exist_ok=True)
+    OUT.mkdir(exist_ok=True)
     (ROOT/'models').mkdir(exist_ok=True)
     frame=make_frame(); train,val,test=splits(frame)
     frame.to_csv(ROOT/'data/model_dataset.csv',index=False)
@@ -90,7 +81,7 @@ def run():
     shap=np.column_stack([contributions,np.full(len(sampled),base)])
     raw=model.decision_function(Xt.iloc[sampled])
     assert np.allclose(shap.sum(axis=1),raw,atol=1e-8)
-    importance=np.abs(contributions).mean(axis=0); order=np.argsort(importance)
+    importance=np.abs(contributions).mean(axis=0)
     pd.DataFrame({'feature':FEATURES,'label':LABELS,'mean_abs_shap':importance}).sort_values('mean_abs_shap',ascending=False).to_csv(OUT/'shap_importance.csv',index=False)
     groups={'Correct wet day':(yt==1)&pred,'Correct dry day':(yt==0)&~pred,
             'Missed wet day':(yt==1)&~pred,'False wet alert':(yt==0)&pred}
@@ -111,17 +102,12 @@ def run():
         candidates=candidates,selected_params=dict(reg_param=float(qda.reg_param),preprocessing="log1p of three rainfall features; train-only standardisation",priors="training class frequencies"),
         validation=metrics(yv,pval,threshold),test=scores,
         shap=dict(n=len(sampled),background_n=len(train),method='exact interventional SHAP of quadratic score',space='raw log odds',max_additivity_error=float(np.max(np.abs(shap.sum(axis=1)-raw)))),
-        examples=examples,versions={k:importlib.metadata.version(k) for k in ['numpy','pandas','scikit-learn','matplotlib','streamlit']},
+        examples=examples,versions={k:importlib.metadata.version(k) for k in ['numpy','pandas','scikit-learn','matplotlib','Flask','gunicorn'] if k != 'gunicorn' or platform.system() != 'Windows'},
         python=platform.python_version())
     (OUT/'metrics.json').write_text(json.dumps(summary,indent=2))
     model.save(ROOT/'models/qda.json')
-    plt.rcParams.update({'font.size':10,'axes.spines.top':False,'axes.spines.right':False})
-    colors=['#222222','#555555','#888888','#444444','#aaaaaa']
-    plt.figure(figsize=(7,4))
-    for (name,probs),color,style in zip(probabilities.items(),colors,['-','--','-.',':','-']):
-        fpr,tpr,_=roc_curve(yt,probs); plt.plot(fpr,tpr,label=f'{name}: {scores[name]["auc"]:.3f}',color=color,linestyle=style)
-    plt.plot([0,1],[0,1],'k--',alpha=.3);plt.xlabel('False positive rate');plt.ylabel('True positive rate');plt.legend(fontsize=8);save_plot('roc')
-    plt.figure(figsize=(7,3.6));plt.barh(np.array(LABELS)[order],importance[order],color=colors[0]);plt.xlabel('Mean absolute SHAP value (log odds)');save_plot('shap_global')
+    from src.plots import run as make_plots
+    make_plots()
     print(json.dumps({'rows':len(frame),'regularisation':float(qda.reg_param),'threshold':threshold,'test':scores},indent=2))
 
 if __name__=='__main__': run()

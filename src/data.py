@@ -12,10 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 FEATURES = ["rain_today", "humidity_today", "temp_max_today", "temp_min_today",
             "wind_today", "pressure_today", "rain_mean_3d", "rain_mean_7d",
             "pressure_change", "season_sin", "season_cos"]
-LABELS = ["Today's rain (mm)", "Today's mean humidity (%)", "Today's maximum temperature (C)",
-          "Today's minimum temperature (C)", "Today's maximum wind (km/h)",
-          "Today's mean pressure (hPa)", "Mean rain over last 3 days (mm)",
-          "Mean rain over last 7 days (mm)", "Pressure change since yesterday (hPa)",
+LABELS = ["Preceding-day rain (mm)", "Mean humidity (%)", "Maximum temperature (C)",
+          "Minimum temperature (C)", "Maximum wind (km/h)",
+          "Mean pressure (hPa)", "3-day mean rain (mm/day)",
+          "7-day mean rain (mm/day)", "Pressure change (hPa)",
           "Target-date season (sine)", "Target-date season (cosine)"]
 
 def download():
@@ -47,7 +47,11 @@ def make_frame():
     assert d.time.is_unique and d.time.is_monotonic_increasing
     assert (d.time.diff().dropna() == pd.Timedelta(days=1)).all()
     assert d.drop(columns='time').notna().all().all(), 'Missing raw values require review'
+    assert np.isfinite(d.drop(columns='time').to_numpy()).all(), 'Non-finite raw values'
     assert (d.precipitation_sum >= 0).all()
+    assert (d.temperature_2m_min <= d.temperature_2m_max).all(), 'Temperature extremes are inconsistent'
+    assert d.relative_humidity_2m_mean.between(0, 100).all()
+    assert (d.wind_speed_10m_max >= 0).all()
     x = pd.DataFrame({'observation_date': d.time, 'target_date': d.time + pd.Timedelta(days=1)})
     for feature, raw in [('rain_today','precipitation_sum'),('humidity_today','relative_humidity_2m_mean'),
         ('temp_max_today','temperature_2m_max'),('temp_min_today','temperature_2m_min'),

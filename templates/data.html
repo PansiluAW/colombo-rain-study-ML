@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}The data / Colombo, tomorrow.{% endblock %}
+{% block content %}
+<section class="reading-width">
+  <h1>A compiled local dataset</h1>
+  <p>4,383 daily records from the Open-Meteo Historical Weather API, using ECMWF ERA5. The extract covers 1 January 2014 to 31 December 2025 in the Asia/Colombo time zone. It was collected on 27 October 2026.</p>
+  <table><tbody>
+    <tr><th scope="row">Requested location</th><td>6.9271 N, 79.8612 E</td></tr>
+    <tr><th scope="row">Returned grid cell</th><td>7.0 N, 80.0 E</td></tr>
+    <tr><th scope="row">Usable next-day rows</th><td>4,376</td></tr>
+    <tr><th scope="row">Target</th><td>Next-day precipitation ≥ 1 mm</td></tr>
+    <tr><th scope="row">Inputs</th><td>Rain, humidity, temperature, wind, pressure, rain history and target-date season</td></tr>
+  </tbody></table>
+  <p>Dates are consecutive and complete. The first six incomplete history windows and final unavailable target were removed. Rainfall inputs use log(1 + rain); scaling uses training statistics only. The source request, units and checksum are included in <code>data/provenance.json</code>.</p>
+  <p><a class="download" href="{{ url_for('download_data') }}">Download the daily dataset / CSV ↓</a></p>
+  <h2>Where this study stops</h2>
+  <p>These are gridded estimates, rather than measurements at a Colombo weather station. One grid cell misses local variation. Wet days are common, and a 1 mm boundary creates a sharp distinction between small rainfall amounts.</p>
+  <p>ERA5 is delayed reanalysis. This experiment checks historical rain-day patterns and does not establish real-time forecast skill. Station checks, inputs available at forecast time, calibration and wider geographic testing would be needed for practical use.</p>
+  <p>No personal data were collected. Data by <a href="https://open-meteo.com/en/docs/historical-weather-api">Open-Meteo</a>, using ECMWF ERA5, under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Daily JSON was converted to CSV; lagged, rolling and seasonal predictors were derived.</p>
+</section>
+{% endblock %}

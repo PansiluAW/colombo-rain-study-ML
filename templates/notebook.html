@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="entry-layout">
+  <section aria-labelledby="readings-title">
+    <h1 id="readings-title">The readings</h1>
+    <p class="note">Start with a held-out day. Each example can be edited below.</p>
+    <div class="examples" aria-label="Recorded examples">
+    {% for example in examples %}
+      <a href="{{ url_for('notebook', example=loop.index0) }}">{{ example.name }}<small>{{ example.date }}</small></a>
+    {% endfor %}
+    </div>
+    <form method="post" action="{{ url_for('notebook') }}" id="weather-form">
+      <label class="date-field" for="target_date">Date to predict
+        <input type="date" id="target_date" name="target_date" value="{{ target }}" required>
+      </label>
+      <p class="note">Use the completed day before this date for the readings below.</p>
+      <div class="fields">
+      {% for field in fields %}
+        <label for="{{ field.key }}">{{ field.label }} <span class="unit">{{ field.unit }}</span>
+          <input id="{{ field.key }}" name="{{ field.key }}" type="number" min="{{ field.low }}" max="{{ field.high }}" step="any" value="{{ field.value }}" required>
+        </label>
+      {% endfor %}
+      </div>
+      <p class="note">Rain means end on the preceding day. Pressure change is that day's mean minus the day before it.</p>
+      <button type="submit">Work out the next day <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="pencil">A wet day means at least 1 mm of rain. The nine readings and two seasonal values from the date make the model's eleven inputs.</p>
+  </section>
+  <section class="prediction" aria-labelledby="prediction-title" aria-live="polite">
+    <h1 id="prediction-title">The model's entry</h1>
+    {% if error %}
+      <div class="error" role="alert"><strong>Check the readings</strong><p>{{ error }}</p></div>
+    {% elif prediction %}
+      <p class="entry-date">{{ target_label }}</p>
+      <p class="result-word">{{ prediction.label }}</p>
+      <p class="probability">{{ '%.1f'|format(100 * prediction.probability) }}% <span>model probability of rain</span></p>
+      <p class="note">Wet-day cutoff: {{ '%.0f'|format(100 * threshold) }}%. Probabilities have not been independently calibrated.</p>
+      {% if matched %}<p class="observation">Recorded next-day rain: <strong>{{ '%.1f'|format(matched.actual_rain) }} mm</strong> / {{ 'wet' if matched.actual else 'dry' }}.</p>{% endif %}
+      {% if outside %}<p class="warning">Outside the training range: {{ outside|join(', ') }}.</p>{% endif %}
+      <h2>What moved the score?</h2>
+      <p class="note">Exact interventional SHAP for this entry. Contributions explain log odds, not percentage points.</p>
+      <div class="chart-key"><span>← towards dry</span><span>towards wet →</span></div>
+      <ol class="contributions" aria-label="Six largest SHAP contributions">
+      {% for item in contributions[:6] %}
+        <li><div class="contribution-label">{{ item.label }} <strong>{{ '%+.3f'|format(item.value) }}</strong></div>
+          <div class="bar-track"><div class="half negative">{% if item.value < 0 %}<span style="width:{{ item.width }}%"></span>{% endif %}</div><div class="half positive">{% if item.value >= 0 %}<span style="width:{{ item.width }}%"></span>{% endif %}</div></div>
+        </li>
+      {% endfor %}
+      </ol>
+      <details><summary>All eleven contributions and the score</summary>
+        <div class="table-wrap"><table><thead><tr><th scope="col">Input</th><th scope="col">SHAP / log odds</th></tr></thead><tbody>
+        {% for item in contributions %}<tr><th scope="row">{{ item.label }}</th><td>{{ '%+.4f'|format(item.value) }}</td></tr>{% endfor %}
+        </tbody></table></div>
+        <p class="note">Base {{ '%.3f'|format(prediction.base) }} + contributions {{ '%.3f'|format(prediction.shap.sum()) }} = raw score {{ '%.3f'|format(prediction.raw) }}. The logistic transform converts this score to a probability.</p>
+        <p class="note">The background is all 2,915 training rows. Substitutions can break correlations and the sine/cosine relationship. These are model associations, not causal effects.</p>
+      </details>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
