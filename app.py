@@ -1,5 +1,6 @@
 """Colombo rain notebook. Run locally with flask --app app run."""
 from datetime import date
+from math import cos, pi, sin
 import json
 
 from flask import Flask, abort, render_template, request, send_from_directory
@@ -16,6 +17,10 @@ summary = json.loads((ROOT / 'results/metrics.json').read_text())
 data = pd.read_csv(ROOT / 'data/model_dataset.csv')
 examples = summary['examples']
 threshold = summary['test']['Regularised QDA']['threshold']
+angle = 2 * pi * threshold - pi / 2
+gauge_tick = dict(x1=110 + 83 * cos(angle), y1=110 + 83 * sin(angle),
+                  x2=110 + 99 * cos(angle), y2=110 + 99 * sin(angle))
+daily_preview = pd.read_csv(ROOT / 'data/colombo_daily.csv').head(6).to_dict(orient='records')
 train = data[data.target_date < '2022-01-01']
 
 FIELDS = [
@@ -95,6 +100,7 @@ def notebook():
                            prediction=prediction, threshold=threshold, matched=matched,
                            reference_index=reference_index, reference=reference,
                            comparison=comparison,
+                           gauge_tick=gauge_tick,
                            contributions=contributions, outside=outside, error=error), 422 if error else 200
 
 
@@ -105,7 +111,7 @@ def results():
 
 @app.get('/data')
 def dataset():
-    return render_template('data.html', active='data')
+    return render_template('data.html', active='data', summary=summary, preview=daily_preview)
 
 
 @app.get('/data/daily.csv')

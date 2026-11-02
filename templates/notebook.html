@@ -1,56 +1,93 @@
 {% extends 'base.html' %}
 {% block content %}
+{% macro field_control(field) %}
+<label for="{{ field.key }}">{{ field.label }} <span class="unit">{{ field.unit }}</span>
+  <input id="{{ field.key }}" name="{{ field.key }}" type="number" min="{{ field.low }}" max="{{ field.high }}" step="any" value="{{ field.value }}" required>
+</label>
+{% endmacro %}
 {% macro shap_bars(items, label) %}
 <ol class="contributions" aria-label="{{ label }}">
 {% for item in items %}
-  <li><div class="contribution-label">{{ item.label }} <strong>{{ '%+.3f'|format(item.value) }}</strong></div>
+  <li><div class="contribution-label"><span>{{ item.label }}</span><strong>{{ '%+.3f'|format(item.value) }}</strong></div>
     <div class="bar-track"><div class="half negative">{% if item.value < 0 %}<span style="width:{{ item.width }}%"></span>{% endif %}</div><div class="half positive">{% if item.value >= 0 %}<span style="width:{{ item.width }}%"></span>{% endif %}</div></div>
   </li>
 {% endfor %}
 </ol>
 {% endmacro %}
+<section class="page-heading">
+  <div><p class="eyebrow">THE WEATHER EXPLORER</p><h1>See what changes the rain estimate.</h1>
+  <p class="intro">Choose a recorded day. Adjust the weather. See the prediction and its explanation respond.</p></div>
+  <div class="study-tag"><span class="tag-dot"></span>Regularised QDA <span>+ exact SHAP</span></div>
+</section>
+<section class="scenario-section" aria-label="Recorded examples">
+  <p class="section-label">Start with a recorded example</p>
+  <div class="examples">
+  {% for example in examples %}
+    <a class="example-card {% if matched and matched.name == example.name %}selected{% endif %}" href="{{ url_for('notebook', example=loop.index0) }}">
+      <span class="example-name">{{ example.name }}</span><small>{{ example.date }}</small><span class="example-arrow" aria-hidden="true">↗</span>
+    </a>
+  {% endfor %}
+  </div>
+</section>
 <div class="entry-layout">
-  <section class="readings-panel" aria-labelledby="readings-title">
-    <h1 id="readings-title">Weather observations</h1>
-    <p class="note">Start with a recorded day. Change a reading to see the prediction and explanation update.</p>
-    <div class="examples" aria-label="Recorded examples">
-    {% for example in examples %}
-      <a class="{% if matched and matched.name == example.name %}selected{% endif %}" href="{{ url_for('notebook', example=loop.index0) }}">{{ example.name }}<small>{{ example.date }}</small></a>
-    {% endfor %}
-    </div>
+  <section class="readings-panel panel" aria-labelledby="readings-title">
+    <div class="panel-heading"><div><p class="eyebrow">01 / YOUR INPUTS</p><h2 id="readings-title">Adjust the weather</h2></div><button id="readings-toggle" type="button" class="quiet-button" hidden>Show all readings</button></div>
+    <p class="note">Use observations from the completed day before the date below.</p>
     <form method="post" action="{{ url_for('notebook') }}#prediction" id="weather-form">
       <input type="hidden" name="reference_example" value="{{ reference_index if reference_index is not none else '' }}">
       <label class="date-field" for="target_date">Date to predict
         <input type="date" id="target_date" name="target_date" value="{{ target }}" required>
       </label>
-      <p class="note">Use the completed day before this date for the readings below.</p>
-      <div class="fields">
-      {% for field in fields %}
-        <label for="{{ field.key }}">{{ field.label }} <span class="unit">{{ field.unit }}</span>
-          <input id="{{ field.key }}" name="{{ field.key }}" type="number" min="{{ field.low }}" max="{{ field.high }}" step="any" value="{{ field.value }}" required>
-        </label>
-      {% endfor %}
-      </div>
-      <p class="note">Rain means end on the preceding day. Pressure change is that day's mean minus the day before it.</p>
+      <details class="weather-group" open>
+        <summary><span>Rain, humidity &amp; wind</span><small>3 readings</small></summary>
+        <div class="fields">
+          {{ field_control(fields[0]) }}{{ field_control(fields[4]) }}{{ field_control(fields[1]) }}
+        </div>
+      </details>
+      <details class="weather-group">
+        <summary><span>Temperature &amp; pressure</span><small>4 readings</small></summary>
+        <div class="fields">
+          {{ field_control(fields[2]) }}{{ field_control(fields[3]) }}{{ field_control(fields[5]) }}{{ field_control(fields[8]) }}
+        </div>
+        <p class="field-hint">Pressure change is the preceding day's mean minus the day before it.</p>
+      </details>
+      <details class="weather-group">
+        <summary><span>Recent rain history</span><small>2 readings</small></summary>
+        <div class="fields">{{ field_control(fields[6]) }}{{ field_control(fields[7]) }}</div>
+        <p class="field-hint">Both means end on the preceding day and include that day's rain.</p>
+      </details>
       <div class="form-actions">
-        <button type="submit">Calculate prediction <span aria-hidden="true">→</span></button>
+        <button type="submit" class="primary-button">Calculate prediction <span aria-hidden="true">→</span></button>
         <a class="restore" href="{{ url_for('notebook', example=reference_index if reference_index is not none else 0) }}">Restore example</a>
       </div>
     </form>
-    <p class="pencil">A wet day means at least 1 mm of rain. The nine readings and two seasonal values from the date make the model's eleven inputs.</p>
-    <noscript><p class="note">Use Calculate prediction to apply your changes.</p></noscript>
+    <p class="input-footnote">Nine weather readings + two seasonal values from the date = eleven model inputs.</p>
+    <noscript><p class="note">Open a group to edit its readings, then use Calculate prediction.</p></noscript>
   </section>
-  <section id="prediction" class="prediction" aria-labelledby="prediction-title" aria-live="polite">
-    <h2 id="prediction-title">Next-day estimate <span id="update-status" role="status">{{ 'Saved example' if matched else 'Your readings' }}</span></h2>
+  <section id="prediction" class="prediction panel" aria-labelledby="prediction-title" aria-live="polite">
+    <div class="panel-heading result-heading"><div><p class="eyebrow">02 / THE ESTIMATE</p><h2 id="prediction-title">Next-day estimate</h2></div><span id="update-status" role="status">{{ 'Saved example' if matched else 'Your readings' }}</span></div>
     <div class="prediction-body">
     {% if error %}
       <div class="error" role="alert"><strong>Check the readings</strong><p>{{ error }}</p></div>
     {% elif prediction %}
       <p class="entry-date">{{ target_label }}</p>
-      <div class="estimate {{ prediction.label|lower }}"><p class="result-word {{ prediction.label|lower }}">{{ prediction.label }}</p>
-      <p class="probability">{{ '%.1f'|format(100 * prediction.probability) }}% <span>model probability of rain</span></p></div>
-      <div class="probability-meter" role="img" aria-label="Wet-day probability {{ '%.1f'|format(100 * prediction.probability) }} percent; cutoff {{ '%.0f'|format(100 * threshold) }} percent"><span class="fill" style="width:{{ 100 * prediction.probability }}%"></span><span class="cutoff" style="left:{{ 100 * threshold }}%"></span></div><div class="meter-labels"><span>0%</span><span>Wet cutoff: {{ '%.0f'|format(100 * threshold) }}%</span><span>100%</span></div>
-      <p class="note">Wet-day cutoff: {{ '%.0f'|format(100 * threshold) }}%. Probabilities have not been independently calibrated.</p>
+      <div class="outlook">
+        <div class="gauge" role="img" aria-label="Wet-day probability {{ '%.1f'|format(100 * prediction.probability) }} percent; wet cutoff {{ '%.0f'|format(100 * threshold) }} percent">
+          <svg class="gauge-svg" viewBox="0 0 220 220" aria-hidden="true">
+            <circle class="gauge-track" cx="110" cy="110" r="88" pathLength="100"/>
+            <circle class="gauge-fill" cx="110" cy="110" r="88" pathLength="100" stroke-dasharray="{{ 100 * prediction.probability }} 100" transform="rotate(-90 110 110)"/>
+            <line class="gauge-tick" x1="{{ '%.2f'|format(gauge_tick.x1) }}" y1="{{ '%.2f'|format(gauge_tick.y1) }}" x2="{{ '%.2f'|format(gauge_tick.x2) }}" y2="{{ '%.2f'|format(gauge_tick.y2) }}"/>
+          </svg>
+          <p class="probability" aria-hidden="true">{{ '%.1f'|format(100 * prediction.probability) }}%<span>wet-day probability</span></p>
+        </div>
+        <div class="outlook-summary">
+          <p class="result-word {{ prediction.label|lower }}">{{ prediction.label }}</p>
+          <h3>{{ 'At or above' if prediction.probability >= threshold else 'Below' }} the wet-day cutoff</h3>
+          <p class="cutoff-label"><i></i>Decision cutoff: {{ '%.0f'|format(100 * threshold) }}%</p>
+          <p class="note">A wet day means at least 1 mm of rain.</p>
+        </div>
+      </div>
+      <p class="calibration-note">Research estimate · Probabilities have not been independently calibrated.</p>
       {% if matched %}<p class="observation">Recorded next-day rain: <strong>{{ '%.1f'|format(matched.actual_rain) }} mm</strong> / {{ 'wet' if matched.actual else 'dry' }}.</p>{% endif %}
       {% if comparison %}
       <section class="comparison" aria-label="Comparison with original entry">
@@ -61,14 +98,12 @@
       </section>
       {% endif %}
       {% if outside %}<p class="warning">Outside the training range: {{ outside|join(', ') }}.</p>{% endif %}
-      <h3>What moved the score?</h3>
+      <div class="explanation-heading"><p class="eyebrow">03 / UNDERSTAND THE RESULT</p><h3>What moved the score?</h3></div>
       <p class="note">SHAP values are log odds, not percentage points. Longer bars have more influence.</p>
       <div class="chart-key"><span><i class="key-dot dry-dot"></i> Towards dry</span><span>Towards wet <i class="key-dot wet-dot"></i></span></div>
       {{ shap_bars(contributions[:6], 'Six largest SHAP contributions') }}
-      <details class="remaining-bars"><summary>Show remaining five contributions</summary>
-        {{ shap_bars(contributions[6:], 'Remaining five SHAP contributions') }}
-      </details>
-      <details><summary>All eleven contributions and the score</summary>
+      <details class="remaining-bars"><summary>Show remaining five contributions</summary>{{ shap_bars(contributions[6:], 'Remaining five SHAP contributions') }}</details>
+      <details class="score-details"><summary>All eleven contributions and the score</summary>
         <div class="table-wrap"><table><thead><tr><th scope="col">Input</th><th scope="col">SHAP / log odds</th></tr></thead><tbody>
         {% for item in contributions %}<tr><th scope="row">{{ item.label }}</th><td>{{ '%+.4f'|format(item.value) }}</td></tr>{% endfor %}
         </tbody></table></div>
@@ -79,5 +114,6 @@
     </div>
   </section>
 </div>
-<script src="{{ url_for('static', filename='interaction.js') }}" defer></script>
+<a class="mobile-result-link" href="#prediction">View estimate &amp; explanation ↓</a>
+<script src="{{ url_for('static', filename='interaction.js', v='2') }}" defer></script>
 {% endblock %}

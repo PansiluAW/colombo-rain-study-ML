@@ -3,6 +3,7 @@ import hashlib
 import itertools
 import json
 import math
+import re
 import unittest
 from html.parser import HTMLParser
 
@@ -96,6 +97,19 @@ class FrontendChecks(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIn(f'{100 * example["probability"]:.1f}%', html)
             self.assertIn('Recorded next-day rain', html)
+            arc = re.search(r'class="gauge-fill"[^>]*stroke-dasharray="([0-9.eE+-]+) 100"', html)
+            self.assertIsNotNone(arc)
+            self.assertAlmostEqual(float(arc[1]), 100 * example['probability'], places=10)
+
+    def test_dataset_preview_matches_the_included_csv(self):
+        html = self.client.get('/data').get_data(as_text=True)
+        preview = html.split('A LOOK AT THE ORIGINAL RECORDS', 1)[1].split('</section>', 1)[0]
+        source = pd.read_csv(ROOT / 'data/colombo_daily.csv').head(6)
+        for row in source.to_dict(orient='records'):
+            self.assertIn(f'>{row["time"]}</th>', preview)
+            self.assertIn(f'>{row["temperature_2m_max"]:.1f}</td>', preview)
+            self.assertIn(f'>{row["surface_pressure_mean"]:.1f}</td>', preview)
+        self.assertIn('2915 training rows, 730 validation rows and 731 test rows', html)
 
     def test_changed_input_recomputes_prediction_and_explanation(self):
         original = self.client.post('/', data=self.values).get_data(as_text=True)

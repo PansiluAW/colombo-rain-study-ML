@@ -1,21 +1,44 @@
 {% extends 'base.html' %}
-{% block title %}The data / Colombo, tomorrow.{% endblock %}
+{% block title %}Data & limits / Colombo, tomorrow.{% endblock %}
 {% block content %}
-<section class="reading-width">
-  <h1>A compiled local dataset</h1>
-  <p>4,383 daily records from the Open-Meteo Historical Weather API, using ECMWF ERA5. The extract covers 1 January 2014 to 31 December 2025 in the Asia/Colombo time zone. It was collected on 27 October 2026.</p>
-  <table><tbody>
-    <tr><th scope="row">Requested location</th><td>6.9271 N, 79.8612 E</td></tr>
-    <tr><th scope="row">Returned grid cell</th><td>7.0 N, 80.0 E</td></tr>
-    <tr><th scope="row">Usable next-day rows</th><td>4,376</td></tr>
-    <tr><th scope="row">Target</th><td>Next-day precipitation ≥ 1 mm</td></tr>
-    <tr><th scope="row">Inputs</th><td>Rain, humidity, temperature, wind, pressure, rain history and target-date season</td></tr>
-  </tbody></table>
-  <p>Dates are consecutive and complete. The first six incomplete history windows and final unavailable target were removed. Rainfall inputs use log(1 + rain); scaling uses training statistics only. The source request, units and checksum are included in <code>data/provenance.json</code>.</p>
-  <p><a class="download" href="{{ url_for('download_data') }}">Download the daily dataset / CSV ↓</a></p>
-  <h2>Where this study stops</h2>
-  <p>These are gridded estimates, rather than measurements at a Colombo weather station. One grid cell misses local variation. Wet days are common, and a 1 mm boundary creates a sharp distinction between small rainfall amounts.</p>
-  <p>ERA5 is delayed reanalysis. This experiment checks historical rain-day patterns and does not establish real-time forecast skill. Station checks, inputs available at forecast time, calibration and wider geographic testing would be needed for practical use.</p>
-  <p>No personal data were collected. Data by <a href="https://open-meteo.com/en/docs/historical-weather-api">Open-Meteo</a>, using ECMWF ERA5, under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Daily JSON was converted to CSV; lagged, rolling and seasonal predictors were derived.</p>
+<section>
+  <div class="page-heading"><div><p class="eyebrow">DATA &amp; LIMITS</p><h1>A local study, with a clear source.</h1>
+    <p class="intro">4,383 daily records from Open-Meteo's Historical Weather API, using ECMWF ERA5. The extract covers 1 January 2014 to 31 December 2025 in the Asia/Colombo time zone, collected on 27 October 2026.</p>
+  </div><a class="download" href="{{ url_for('download_data') }}">Download daily CSV ↓</a></div>
+  <div class="data-layout">
+    <div class="panel data-panel">
+      <p class="eyebrow">THE DATA AT A GLANCE</p><h2>From daily weather to next-day labels</h2>
+      <div class="data-counts"><div><strong>4,383</strong><span>daily records</span></div><div><strong>4,376</strong><span>modelling rows</span></div><div><strong>11</strong><span>predictors</span></div></div>
+      <table><tbody>
+        <tr><th scope="row">Requested location</th><td>6.9271 N, 79.8612 E</td></tr>
+        <tr><th scope="row">Returned grid cell</th><td>7.0 N, 80.0 E</td></tr>
+        <tr><th scope="row">Target</th><td>Next-day precipitation ≥ 1 mm</td></tr>
+        <tr><th scope="row">Inputs</th><td>Rain, humidity, temperature, wind, pressure, rain history and target-date season</td></tr>
+      </tbody></table>
+      <p class="note">Dates are consecutive and complete. The first six incomplete history windows and final unavailable target were removed. Rain inputs use log(1 + rain); scaling uses training statistics only. Source details are in <code>data/provenance.json</code>.</p>
+    </div>
+    <div class="panel split-panel">
+      <p class="eyebrow">TIME ORDER MATTERS</p><h2>Train, validate, then test</h2>
+      <p class="note">Later dates stay out of earlier model decisions.</p>
+      <div class="split-band" role="img" aria-label="Chronological split: 2915 training rows, 730 validation rows and 731 test rows">
+      {% for name, split in summary.splits.items() %}<span class="split-{{ name }}" style="width:{{ 100 * split.n / summary.usable_rows }}%"></span>{% endfor %}
+      </div>
+      <div class="split-legend">{% for name, split in summary.splits.items() %}<div><i class="split-{{ name }}"></i><strong>{{ name|capitalize }}</strong><span>{{ split.start[:4] }}–{{ split.end[:4] }}</span><small>{{ '{:,}'.format(split.n) }} rows</small></div>{% endfor %}</div>
+      <div class="source-note"><h3>Source &amp; permission</h3><p>Open-Meteo Historical Weather API, using ECMWF ERA5. Public weather data, attributed under CC BY 4.0.</p><p class="note">The source request, units and checksum are supplied with the dataset.</p><a class="source-link" href="https://github.com/PansiluAW/colombo-rain-study-ML/blob/main/data/provenance.json" target="_blank" rel="noopener">View collection request &amp; provenance ↗</a></div>
+    </div>
+  </div>
+  <section class="dataset-preview panel">
+    <div class="panel-heading"><div><p class="eyebrow">A LOOK AT THE ORIGINAL RECORDS</p><h2>Dataset preview</h2></div><span class="preview-tag">First 6 daily records</span></div>
+    <div class="table-wrap"><table><thead><tr><th scope="col">Date</th><th scope="col">Rain / mm</th><th scope="col">Humidity / %</th><th scope="col">Max temp / °C</th><th scope="col">Pressure / hPa</th></tr></thead><tbody>
+      {% for row in preview %}<tr><th scope="row">{{ row.time }}</th><td>{{ '%.1f'|format(row.precipitation_sum) }}</td><td>{{ row.relative_humidity_2m_mean }}</td><td>{{ '%.1f'|format(row.temperature_2m_max) }}</td><td>{{ '%.1f'|format(row.surface_pressure_mean) }}</td></tr>{% endfor %}
+    </tbody></table></div>
+    <p class="note">A sample of the raw daily CSV. The full download includes all dates and weather columns.</p>
+  </section>
+  <section class="limits-panel">
+    <p class="eyebrow">BEFORE USING THE ESTIMATE</p><h2>Where this study stops</h2>
+    <p>These are gridded estimates, rather than measurements at a Colombo weather station. One grid cell misses local variation. Wet days are common, and a 1 mm boundary creates a sharp distinction between small rainfall amounts.</p>
+    <p>ERA5 is delayed reanalysis. This experiment checks historical rain-day patterns and does not establish real-time forecast skill. Station checks, inputs available at forecast time, calibration and wider geographic testing would be needed for practical use.</p>
+    <p>No personal data were collected. Data by <a href="https://open-meteo.com/en/docs/historical-weather-api">Open-Meteo</a>, using ECMWF ERA5, under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Daily JSON was converted to CSV; lagged, rolling and seasonal predictors were derived.</p>
+  </section>
 </section>
 {% endblock %}

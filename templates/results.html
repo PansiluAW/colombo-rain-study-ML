@@ -1,13 +1,23 @@
 {% extends 'base.html' %}
 {% block title %}Test results / Colombo, tomorrow.{% endblock %}
 {% block content %}
-<section>
-  <h1>Leave the last two years out</h1>
+<section><div class="page-heading"><div><p class="eyebrow">MODEL RESULTS</p>
+  <h1>How it performed on unseen days.</h1>
   <p>Fit: 2014–2021. Validation: 2022–2023. Test: 2024–2025, with 556 wet and 175 dry days. All settings were selected before evaluating the test period.</p>
+  </div></div>
+  {% set qda = summary.test['Regularised QDA'] %}
+  <div class="stat-grid">
+    <div class="stat"><span>Ranking / AUC</span><strong>{{ '%.3f'|format(qda.auc) }}</strong><small>Across probability cutoffs</small></div>
+    <div class="stat"><span>Wet-day recall</span><strong>{{ '%.1f'|format(100 * qda.recall) }}<em>%</em></strong><small>Wet days correctly detected</small></div>
+    <div class="stat"><span>Dry-day recall</span><strong>{{ '%.1f'|format(100 * qda.specificity) }}<em>%</em></strong><small>Dry days correctly detected</small></div>
+    <div class="stat"><span>Held-out days</span><strong>{{ summary.splits.test.n }}</strong><small>2024–2025 test period</small></div>
+  </div>
+  <div class="section-heading"><p class="eyebrow">THE BASELINE COMPARISON</p><h2>Read the trade-offs</h2></div>
   <div class="table-wrap"><table class="metrics"><thead><tr><th scope="col">Model</th><th scope="col">AUC</th><th scope="col">Accuracy</th><th scope="col">Balanced accuracy</th><th scope="col">F1</th><th scope="col">Brier loss ↓</th></tr></thead><tbody>
     {% for name, metrics in summary.test.items() %}<tr><th scope="row">{{ name }}</th>{% for key in ['auc', 'accuracy', 'balanced_accuracy', 'f1', 'brier'] %}<td>{{ '%.3f'|format(metrics[key]) }}</td>{% endfor %}</tr>{% endfor %}
   </tbody></table></div>
   <p>QDA did not win every comparison. Logistic regression gave higher AUC and lower Brier loss; persistence gave higher accuracy and F1. Monthly climatology gave higher balanced accuracy.</p>
+  <div class="section-heading"><p class="eyebrow">LOOK CLOSER</p><h2>Evaluation charts</h2></div>
   <p class="note">Select a chart to open it at full size.</p>
   <div class="figure-pair">
     <figure><a href="{{ url_for('figure', name='roc') }}" target="_blank" rel="noopener" aria-label="Open roc chart at full size"><img src="{{ url_for('figure', name='roc') }}" alt="ROC curves: QDA AUC 0.873; logistic regression 0.885; monthly climatology 0.825."></a><figcaption>Test-period ranking across probability cutoffs.</figcaption></figure>
@@ -17,7 +27,7 @@
     <figure><a href="{{ url_for('figure', name='precision_recall') }}" target="_blank" rel="noopener" aria-label="Open precision recall chart at full size"><img src="{{ url_for('figure', name='precision_recall') }}" alt="Precision-recall curves for the held-out test period."></a><figcaption>Precision and recall, with wet days as the positive class.</figcaption></figure>
     <figure><a href="{{ url_for('figure', name='validation') }}" target="_blank" rel="noopener" aria-label="Open validation chart at full size"><img src="{{ url_for('figure', name='validation') }}" alt="Validation AUC for eight covariance regularisation values; alpha 0.75 selected."></a><figcaption>Covariance regularisation chosen using validation AUC.</figcaption></figure>
   </div>
-  <h2>What the fitted model uses</h2>
+  <div class="section-heading"><p class="eyebrow">EXPLAINABILITY</p><h2>What the fitted model uses</h2></div>
   <div class="figure-pair">
     <figure><a href="{{ url_for('figure', name='shap_global') }}" target="_blank" rel="noopener" aria-label="Open shap global chart at full size"><img src="{{ url_for('figure', name='shap_global') }}" alt="Mean absolute SHAP: preceding-day rain, humidity and cosine season have the largest contributions."></a><figcaption>240 evenly spaced test days; all training rows form the background.</figcaption></figure>
     <figure><a href="{{ url_for('figure', name='shap_local') }}" target="_blank" rel="noopener" aria-label="Open shap local chart at full size"><img src="{{ url_for('figure', name='shap_local') }}" alt="Individual SHAP contributions for a correct wet prediction and a false wet alert."></a><figcaption>Individual explanations can also describe confident wrong predictions.</figcaption></figure>

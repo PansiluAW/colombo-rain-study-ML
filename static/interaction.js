@@ -9,7 +9,7 @@
   sliderLabel.className = 'slider-label';
   sliderLabel.textContent = 'Explore humidity';
   const slider = document.createElement('input');
-  Object.assign(slider, {type: 'range', min: '0', max: '100', step: '1', value: humidity.value});
+  Object.assign(slider, {type: 'range', min: '0', max: '100', step: 'any', value: humidity.value});
   slider.setAttribute('aria-label', 'Explore humidity, percent');
   sliderLabel.append(slider);
   const scale = document.createElement('span');
@@ -17,6 +17,27 @@
   scale.innerHTML = '<span>0% dry air</span><span>100% saturated</span>';
   sliderLabel.append(scale);
   humidity.closest('label').after(sliderLabel);
+  const groups = [...form.querySelectorAll('.weather-group')];
+  const readingsToggle = document.querySelector('#readings-toggle');
+  if (readingsToggle) {
+    function syncGroups() {
+      const allOpen = groups.every(group => group.open);
+      readingsToggle.textContent = allOpen ? 'Compact view' : 'Show all readings';
+      readingsToggle.setAttribute('aria-expanded', String(allOpen));
+    }
+    readingsToggle.hidden = false;
+    readingsToggle.addEventListener('click', () => {
+      const expand = !groups.every(group => group.open);
+      groups.forEach((group, i) => { group.open = expand || i === 0; });
+      syncGroups();
+    });
+    groups.forEach(group => group.addEventListener('toggle', syncGroups));
+    syncGroups();
+  }
+  form.addEventListener('invalid', event => {
+    const group = event.target.closest('.weather-group');
+    if (group) group.open = true;
+  }, true);
   let timer, controller, revision = 0;
   async function update() {
     const current = ++revision;

@@ -3,25 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17344e">
   <title>{% block title %}Colombo, tomorrow.{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='notebook.css', v='4') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='notebook.css', v='5') }}">
 </head>
 <body>
+<div class="site-top"><div class="site-top-inner"><span>COLOMBO AREA · HISTORICAL WEATHER EXPLORER</span><span>ERA5 / 2014–2025</span></div></div>
 <div class="sheet">
-  <header>
-    <div class="edition"><span>COLOMBO RAIN STUDY</span><span>269220E · IT5514</span></div>
-    <a class="masthead" href="{{ url_for('notebook') }}">Colombo, <em>tomorrow.</em></a>
-    <p class="subtitle">Rain-day classification from recent weather and seasonal patterns.</p>
-    <nav aria-label="Notebook pages">
-      <a {% if active == 'entry' %}aria-current="page"{% endif %} href="{{ url_for('notebook') }}">01 / Make an entry</a>
-      <a {% if active == 'results' %}aria-current="page"{% endif %} href="{{ url_for('results') }}">02 / Test results</a>
-      <a {% if active == 'data' %}aria-current="page"{% endif %} href="{{ url_for('dataset') }}">03 / The data</a>
+  <header class="site-header">
+    <a class="masthead" href="{{ url_for('notebook') }}"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M10 23a7 7 0 0 1 0-14 10 10 0 0 1 19 4 5 5 0 0 1 0 10Z" stroke="currentColor" stroke-width="2"/><path d="m13 28-2 5m10-5-2 5m10-5-2 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Colombo, <em>tomorrow.</em></a>
+    <nav aria-label="Main pages">
+      <a {% if active == 'entry' %}aria-current="page"{% endif %} href="{{ url_for('notebook') }}">Explore</a>
+      <a {% if active == 'results' %}aria-current="page"{% endif %} href="{{ url_for('results') }}">Model results</a>
+      <a {% if active == 'data' %}aria-current="page"{% endif %} href="{{ url_for('dataset') }}">Data &amp; limits</a>
     </nav>
   </header>
   <main>{% block content %}{% endblock %}</main>
   <footer>
-    <p>Pansilu Ashinshana Wijesiri · 269220E<br>IT5514 - Applied Machine Learning · MSc in Artificial Intelligence, University of Moratuwa<br><a class="footer-link" href="https://github.com/PansiluAW/colombo-rain-study-ML">Source code on GitHub ↗</a></p>
-    <p>Historical ERA5 reanalysis / 2014–2025<br>Research demonstration; not a live forecast or flood warning.</p>
+    <p><strong>Pansilu Ashinshana Wijesiri · 269220E</strong><br>IT5514 - Applied Machine Learning · MSc in Artificial Intelligence, University of Moratuwa</p>
+    <p>Historical research demonstration; not a live forecast or flood warning.<br><a href="https://github.com/PansiluAW/colombo-rain-study-ML">Project source on GitHub ↗</a></p>
   </footer>
 </div>
 </body>
