@@ -1,6 +1,4 @@
 # colombo-rain-study-ML
-Assignment targeting the applied machine learning concepts attended during the MSc program at the University of Moratuwa.
-
 Next-day rain classification for the Colombo area using regularised Quadratic Discriminant Analysis (QDA) and exact interventional SHAP.
 
 IT5514 - Applied Machine Learning. Pansilu Ashinshana Wijesiri, 269220E. MSc in Artificial Intelligence, University of Moratuwa.
@@ -38,6 +36,6 @@ Weather data by Open-Meteo, using ECMWF ERA5, under [CC BY 4.0](https://creative
 
 Training recreates the saved model, metrics, held-out predictions and six figures in `results/plots`. It uses the included data snapshot; `python -m src.data` is only needed to collect a fresh extract, which may differ if the source is revised.
 
-The Flask frontend accepts weather inputs and shows predictions with SHAP explanations. It demonstrates historical classification using delayed reanalysis, not a live forecast or flood warning.
+The Flask frontend groups the weather readings into expandable controls. A probability dial, original/edited comparison and SHAP bars update as readings change; recorded examples can be restored. All eleven contributions, full-size study charts, the raw dataset preview and CSV download are available. This is historical classification using delayed reanalysis, not a live forecast or flood warning.
 
 The [report](https://github.com/PansiluAW/colombo-rain-study-ML/blob/main/report/269220E_ML_Report.pdf) covers the methodology, results and interpretation.

@@ -9,9 +9,11 @@ Pansilu Ashinshana Wijesiri | 269220E
 - [Dataset and source details](data/)
 - [Evaluation results and training figures](results/)
 
-The app demonstrates next-day wet/dry classification with regularised QDA and an explanation for each entry. It uses historical ERA5 data and is a research demonstration.
+The Azure explorer provides grouped weather controls, a probability dial, original/edited comparisons and SHAP explanations. The report includes Azure, GitHub, dataset and source screenshots. This is a historical research demonstration.
 
 ## Application screenshots
+
+![Weather explorer on Azure](report/screenshots/workspace.jpg)
 
 ![Wet-day probability after editing humidity](report/screenshots/prediction.jpg)
 
