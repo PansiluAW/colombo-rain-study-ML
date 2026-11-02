@@ -80,7 +80,7 @@ class FrontendChecks(unittest.TestCase):
 
     def test_pages_figures_and_download(self):
         for path in ['/', '/results', '/data', '/health', '/data/daily.csv',
-                     '/static/notebook.css'] + [f'/figures/{name}.png' for name in
+                     '/static/notebook.css', '/static/interaction.js'] + [f'/figures/{name}.png' for name in
                      ['validation', 'roc', 'precision_recall', 'confusion', 'shap_global', 'shap_local']]:
             with self.subTest(path=path):
                 response = self.client.get(path)

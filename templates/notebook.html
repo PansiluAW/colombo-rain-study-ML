@@ -3,7 +3,7 @@
 <div class="entry-layout">
   <section class="readings-panel" aria-labelledby="readings-title">
     <h1 id="readings-title">Weather observations</h1>
-    <p class="note">Choose a recorded test day, then change the readings to explore the model.</p>
+    <p class="note">Start with a recorded day. Change a reading to see the prediction and explanation update.</p>
     <div class="examples" aria-label="Recorded examples">
     {% for example in examples %}
       <a class="{% if matched and matched.name == example.name %}selected{% endif %}" href="{{ url_for('notebook', example=loop.index0) }}">{{ example.name }}<small>{{ example.date }}</small></a>
@@ -25,23 +25,24 @@
       <button type="submit">Calculate prediction <span aria-hidden="true">→</span></button>
     </form>
     <p class="pencil">A wet day means at least 1 mm of rain. The nine readings and two seasonal values from the date make the model's eleven inputs.</p>
+    <noscript><p class="note">Use Calculate prediction to apply your changes.</p></noscript>
   </section>
   <section id="prediction" class="prediction" aria-labelledby="prediction-title" aria-live="polite">
-    <h2 id="prediction-title">Next-day estimate</h2>
+    <h2 id="prediction-title">Next-day estimate <span id="update-status" role="status">{{ 'Saved example' if matched else 'Your readings' }}</span></h2>
     <div class="prediction-body">
     {% if error %}
       <div class="error" role="alert"><strong>Check the readings</strong><p>{{ error }}</p></div>
     {% elif prediction %}
       <p class="entry-date">{{ target_label }}</p>
-      <div class="estimate"><p class="result-word {{ prediction.label|lower }}">{{ prediction.label }}</p>
+      <div class="estimate {{ prediction.label|lower }}"><div class="weather-symbol {{ prediction.label|lower }}" aria-hidden="true">{% if prediction.label == 'WET' %}<svg viewBox="0 0 80 80" fill="none"><path d="M21 47a14 14 0 0 1 1-28 20 20 0 0 1 38 8 10 10 0 0 1 0 20Z" fill="currentColor"/><path d="m27 56-4 9m19-9-4 9m19-9-4 9" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>{% else %}<svg viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="15" fill="currentColor"/><path d="M40 8v9m0 46v9M8 40h9m46 0h9M17 17l7 7m32 32 7 7M17 63l7-7m32-32 7-7" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>{% endif %}<p class="result-word {{ prediction.label|lower }}">{{ prediction.label }}</p></div>
       <p class="probability">{{ '%.1f'|format(100 * prediction.probability) }}% <span>model probability of rain</span></p></div>
-      <div class="probability-meter" role="img" aria-label="Wet-day probability {{ '%.1f'|format(100 * prediction.probability) }} percent; cutoff {{ '%.0f'|format(100 * threshold) }} percent"><span class="fill" style="width:{{ 100 * prediction.probability }}%"></span><span class="cutoff" style="left:{{ 100 * threshold }}%"></span></div><div class="meter-labels"><span>0%</span><span>Wet cutoff: 78%</span><span>100%</span></div>
+      <div class="probability-meter" role="img" aria-label="Wet-day probability {{ '%.1f'|format(100 * prediction.probability) }} percent; cutoff {{ '%.0f'|format(100 * threshold) }} percent"><span class="fill" style="width:{{ 100 * prediction.probability }}%"></span><span class="cutoff" style="left:{{ 100 * threshold }}%"></span></div><div class="meter-labels"><span>0%</span><span>Wet cutoff: {{ '%.0f'|format(100 * threshold) }}%</span><span>100%</span></div>
       <p class="note">Wet-day cutoff: {{ '%.0f'|format(100 * threshold) }}%. Probabilities have not been independently calibrated.</p>
       {% if matched %}<p class="observation">Recorded next-day rain: <strong>{{ '%.1f'|format(matched.actual_rain) }} mm</strong> / {{ 'wet' if matched.actual else 'dry' }}.</p>{% endif %}
       {% if outside %}<p class="warning">Outside the training range: {{ outside|join(', ') }}.</p>{% endif %}
       <h3>What moved the score?</h3>
-      <p class="note">Exact interventional SHAP for this entry. Contributions explain log odds, not percentage points.</p>
-      <div class="chart-key"><span>← towards dry</span><span>towards wet →</span></div>
+      <p class="note">Longer bars have more influence on this prediction. Values are SHAP contributions in log odds.</p>
+      <div class="chart-key"><span><i class="key-dot dry-dot"></i> Towards dry</span><span>Towards wet <i class="key-dot wet-dot"></i></span></div>
       <ol class="contributions" aria-label="Six largest SHAP contributions">
       {% for item in contributions[:6] %}
         <li><div class="contribution-label">{{ item.label }} <strong>{{ '%+.3f'|format(item.value) }}</strong></div>
@@ -60,4 +61,5 @@
     </div>
   </section>
 </div>
+<script src="{{ url_for('static', filename='interaction.js') }}" defer></script>
 {% endblock %}
